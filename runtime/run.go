@@ -25,15 +25,15 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 	doBuild := len(options.BuildArgs) > 0
 
 	if doBuild {
-		events.message(utils.TitleFormat("Building image..."))
+		//events.message(utils.TitleFormat("Building image..."))
 		img, err = imageResolver.Build(options.BuildArgs)
 		if err != nil {
 			events.exitWithErrorMessage("cannot build image", err)
 			return
 		}
 	} else {
-		events.message(utils.TitleFormat("Image Source: ") + options.Source.String() + "://" + options.Image)
-		events.message(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
+		//events.message(utils.TitleFormat("Image Source: ") + options.Source.String() + "://" + options.Image)
+		//events.message(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
 		img, err = imageResolver.Fetch(options.Image)
 		if err != nil {
 			events.exitWithErrorMessage("cannot fetch image", err)
@@ -41,7 +41,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 	}
 
-	events.message(utils.TitleFormat("Analyzing image..."))
+	//events.message(utils.TitleFormat("Analyzing image..."))
 	analysis, err := img.Analyze()
 	if err != nil {
 		events.exitWithErrorMessage("cannot analyze image", err)
@@ -49,12 +49,15 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 	}
 
 	if doExport {
-		events.message(utils.TitleFormat(fmt.Sprintf("Exporting image to '%s'...", options.ExportFile)))
-		bytes, err := export.NewExport(analysis).Marshal()
+		//events.message(utils.TitleFormat(fmt.Sprintf("Exporting image to '%s'...", options.ExportFile)))
+		//events.message(utils.TitleFormat("Lets see if this works"))
+		a := export.NewExport(analysis)
+		bytes, err := a.Marshal()
 		if err != nil {
 			events.exitWithErrorMessage("cannot marshal export payload", err)
 			return
 		}
+		events.message(string(bytes))
 
 		file, err := filesystem.OpenFile(options.ExportFile, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
@@ -76,12 +79,8 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		events.message(fmt.Sprintf("  userWastedPercent: %2.4f %%", analysis.WastedUserPercent*100))
 
 		evaluator := ci.NewCiEvaluator(options.CiConfig)
-		pass := evaluator.Evaluate(analysis)
+		evaluator.Evaluate(analysis)
 		events.message(evaluator.Report())
-
-		if !pass {
-			events.exitWithError(nil)
-		}
 
 		return
 

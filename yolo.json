@@ -1,0 +1,127 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "8792aa27a60beb94c658afc7fb54a4f1c427afe01b65cec0f2261c193ec3f495",
+      "digestId": "sha256:4fc242d58285699eca05db3cc7c7122a2b8e014d9481f323bd9277baacfa0628",
+      "sizeBytes": 5570141,
+      "command": "#(nop) ADD file:5d673d25da3a14ce1f6cf66e4c7fd4f4b85a3759a9d93efb3fd9ff852b5b56e4 in / "
+    },
+    {
+      "index": 1,
+      "id": "601a6b474017d6693bc534dc8ab86c639e278b261efdab1eccf9b955dc233719",
+      "digestId": "sha256:be9057e6dae465a3dd10306bd5398b445a51ede456e250bf9821a346ff5b3570",
+      "sizeBytes": 17825696,
+      "command": "set -x     \u0026\u0026 addgroup -g 101 -S nginx     \u0026\u0026 adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx     \u0026\u0026 apkArch=\"$(cat /etc/apk/arch)\"     \u0026\u0026 nginxPackages=\"         nginx=${NGINX_VERSION}-r${PKG_RELEASE}         nginx-module-xslt=${NGINX_VERSION}-r${PKG_RELEASE}         nginx-module-geoip=${NGINX_VERSION}-r${PKG_RELEASE}         nginx-module-image-filter=${NGINX_VERSION}-r${PKG_RELEASE}         nginx-module-njs=${NGINX_VERSION}.${NJS_VERSION}-r${PKG_RELEASE}     \"     \u0026\u0026 apk add --no-cache --virtual .checksum-deps         openssl     \u0026\u0026 case \"$apkArch\" in         x86_64|aarch64)             set -x             \u0026\u0026 KEY_SHA512=\"e7fa8303923d9b95db37a77ad46c68fd4755ff935d0a534d26eba83de193c76166c68bfe7f65471bf8881004ef4aa6df3e34689c305662750c0172fca5d8552a *stdin\"             \u0026\u0026 wget -O /tmp/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub             \u0026\u0026 if [ \"$(openssl rsa -pubin -in /tmp/nginx_signing.rsa.pub -text -noout | openssl sha512 -r)\" = \"$KEY_SHA512\" ]; then                 echo \"key verification succeeded!\";                 mv /tmp/nginx_signing.rsa.pub /etc/apk/keys/;             else                 echo \"key verification failed!\";                 exit 1;             fi             \u0026\u0026 apk add -X \"https://nginx.org/packages/mainline/alpine/v$(egrep -o '^[0-9]+\\.[0-9]+' /etc/alpine-release)/main\" --no-cache $nginxPackages             ;;         *)             set -x             \u0026\u0026 tempDir=\"$(mktemp -d)\"             \u0026\u0026 chown nobody:nobody $tempDir             \u0026\u0026 apk add --no-cache --virtual .build-deps                 gcc                 libc-dev                 make                 openssl-dev                 pcre2-dev                 zlib-dev                 linux-headers                 libxslt-dev                 gd-dev                 geoip-dev                 perl-dev                 libedit-dev                 bash                 alpine-sdk                 findutils             \u0026\u0026 su nobody -s /bin/sh -c \"                 export HOME=${tempDir}                 \u0026\u0026 cd ${tempDir}                 \u0026\u0026 curl -f -O https://hg.nginx.org/pkg-oss/archive/${NGINX_VERSION}-${PKG_RELEASE}.tar.gz                 \u0026\u0026 PKGOSSCHECKSUM=\\\"29ec1c635da36b7727953544e1a20e9d75bd9d2050e063b9f81f88ca07bb7ea0b65cef46d0f3cb7134b38ce9b94ecada631619f233231845a3d8a16b6ad0db82 *${NGINX_VERSION}-${PKG_RELEASE}.tar.gz\\\"                 \u0026\u0026 if [ \\\"\\$(openssl sha512 -r ${NGINX_VERSION}-${PKG_RELEASE}.tar.gz)\\\" = \\\"\\$PKGOSSCHECKSUM\\\" ]; then                     echo \\\"pkg-oss tarball checksum verification succeeded!\\\";                 else                     echo \\\"pkg-oss tarball checksum verification failed!\\\";                     exit 1;                 fi                 \u0026\u0026 tar xzvf ${NGINX_VERSION}-${PKG_RELEASE}.tar.gz                 \u0026\u0026 cd pkg-oss-${NGINX_VERSION}-${PKG_RELEASE}                 \u0026\u0026 cd alpine                 \u0026\u0026 make all                 \u0026\u0026 apk index -o ${tempDir}/packages/alpine/${apkArch}/APKINDEX.tar.gz ${tempDir}/packages/alpine/${apkArch}/*.apk                 \u0026\u0026 abuild-sign -k ${tempDir}/.abuild/abuild-key.rsa ${tempDir}/packages/alpine/${apkArch}/APKINDEX.tar.gz                 \"             \u0026\u0026 cp ${tempDir}/.abuild/abuild-key.rsa.pub /etc/apk/keys/             \u0026\u0026 apk del .build-deps             \u0026\u0026 apk add -X ${tempDir}/packages/alpine/ --no-cache $nginxPackages             ;;     esac     \u0026\u0026 apk del .checksum-deps     \u0026\u0026 if [ -n \"$tempDir\" ]; then rm -rf \"$tempDir\"; fi     \u0026\u0026 if [ -n \"/etc/apk/keys/abuild-key.rsa.pub\" ]; then rm -f /etc/apk/keys/abuild-key.rsa.pub; fi     \u0026\u0026 if [ -n \"/etc/apk/keys/nginx_signing.rsa.pub\" ]; then rm -f /etc/apk/keys/nginx_signing.rsa.pub; fi     \u0026\u0026 apk add --no-cache --virtual .gettext gettext     \u0026\u0026 mv /usr/bin/envsubst /tmp/         \u0026\u0026 runDeps=\"$(         scanelf --needed --nobanner /tmp/envsubst             | awk '{ gsub(/,/, \"\\nso:\", $2); print \"so:\" $2 }'             | sort -u             | xargs -r apk info --installed             | sort -u     )\"     \u0026\u0026 apk add --no-cache $runDeps     \u0026\u0026 apk del .gettext     \u0026\u0026 mv /tmp/envsubst /usr/local/bin/     \u0026\u0026 apk add --no-cache tzdata     \u0026\u0026 apk add --no-cache curl ca-certificates     \u0026\u0026 ln -sf /dev/stdout /var/log/nginx/access.log     \u0026\u0026 ln -sf /dev/stderr /var/log/nginx/error.log     \u0026\u0026 mkdir /docker-entrypoint.d"
+    },
+    {
+      "index": 2,
+      "id": "a56db9ac24d958e1f5bd9bd479c0e15c58b925f587e8fc73e64fcde827ed616f",
+      "digestId": "sha256:c0b09410617a2a08c34804b5b7831f74c89e11f4d05350c64b1e32e2470bca63",
+      "sizeBytes": 1202,
+      "command": "#(nop) COPY file:65504f71f5855ca017fb64d502ce873a31b2e0decd75297a8fb0a287f97acf92 in / "
+    },
+    {
+      "index": 3,
+      "id": "73d6b78f5538561932829cb295cfb7f7ba5b3011f1bd9be23c6517c8901e8231",
+      "digestId": "sha256:d63b53686463856fa959fe99bc6ae02f00dd0afa7f2cb91a1e6c13b39d83aa2c",
+      "sizeBytes": 1961,
+      "command": "#(nop) COPY file:0b866ff3fc1ef5b03c4e6c8c513ae014f691fb05d530257dfffd07035c1b75da in /docker-entrypoint.d "
+    },
+    {
+      "index": 4,
+      "id": "c63736993f6e4e52fe15b421fbad9514a57caa38e56d66a302ddc4d15342327b",
+      "digestId": "sha256:8df6b63c60d47188f987ef2b5efdc442f9d81650cebdc0e9f7fa8cd4a9012dd3",
+      "sizeBytes": 1037,
+      "command": "#(nop) COPY file:0fd5fca330dcd6a7de297435e32af634f29f7132ed0550d342cad9fd20158258 in /docker-entrypoint.d "
+    },
+    {
+      "index": 5,
+      "id": "fd1295166cb55379af639bf88c220b770b85fb470fba15358bb8824c86f94c0f",
+      "digestId": "sha256:b991c80c3ef2663f4070e668193bc2bb543a77efc2801ebc7f6c2c1bfdb39e5e",
+      "sizeBytes": 4613,
+      "command": "#(nop) COPY file:09a214a3e07c919af2fb2d7c749ccbc446b8c10eb217366e5a65640ee9edcc25 in /docker-entrypoint.d "
+    },
+    {
+      "index": 6,
+      "id": "41035dc278ef39b6af8e60a1595911147d5403d34e0de8b9e39673a323a07178",
+      "digestId": "sha256:c28132dd9eb88357b7eb17866b76c02aa705d8ced6eda6f0816370f620901b2b",
+      "sizeBytes": 1760114,
+      "command": "COPY /app.zip /usr/share/nginx/html/assets/app.zip # buildkit"
+    },
+    {
+      "index": 7,
+      "id": "0b6c7425970836f4ef19723f7f084e04b9a65b998eb74deedee99ede2576aa23",
+      "digestId": "sha256:d7c8e7cb887c98ea943f2a97a21a134d8026fe37537521f1db5d146a90d09ee1",
+      "sizeBytes": 3600775,
+      "command": "COPY /app/site /usr/share/nginx/html # buildkit"
+    }
+  ],
+  "image": {
+    "sizeBytes": 28765539,
+    "inefficientBytes": 566833,
+    "efficiencyScore": 0.988347202532864,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 406446,
+        "file": "/etc/ssl/certs/ca-certificates.crt"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 110990,
+        "file": "/lib/apk/db/installed"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 34816,
+        "file": "/lib/apk/db/scripts.tar"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 9312,
+        "file": "/usr/share/nginx/html/index.html"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 2397,
+        "file": "/etc/passwd"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1412,
+        "file": "/etc/group"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 871,
+        "file": "/etc/shadow"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 301,
+        "file": "/etc/apk/world"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 288,
+        "file": "/lib/apk/db/triggers"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/var/cache/misc"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/tmp"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 0,
+        "file": "/lib/apk/db/lock"
+      }
+    ]
+  }
+}
